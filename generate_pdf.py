@@ -6,11 +6,11 @@ from reportlab.lib.units import mm
 def generate_pdf(c_file_path, student_name, roll_no, date_str, output_text, output_pdf):
     # Prepare C comment-style header (top only)
     header_lines = [
-        f"/*******************************************",
+        f"/*****************************",
         f"{student_name}",
         f"{roll_no}",
         f"{date_str}",
-        f"**********************************************/",
+        f"**************************/",
         ""
     ]
 
@@ -19,7 +19,7 @@ def generate_pdf(c_file_path, student_name, roll_no, date_str, output_text, outp
         code_lines = [line.rstrip() for line in f.readlines()]
 
     # Prepare output comment for the bottom
-    footer_lines = ["", "/*****************OUTPUT************************"] + [f" {line}" for line in output_text.strip().splitlines()]+ ["*/"]
+    footer_lines = ["", "/************OUTPUT*****************"] + [f" {line}" for line in output_text.strip().splitlines()]+ ["*/"]
 
     # Combine all lines: header + code + footer
     full_lines = header_lines + code_lines + footer_lines
