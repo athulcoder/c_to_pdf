@@ -86,6 +86,7 @@ int evalPostfix(char postfix[]){
 	int top =-1;
 	int i =0; 
 	int a,b;
+	char ch;
 	while((ch=postfix[i++]) != '\0'){
 		
 		if (isdigit(ch)){
