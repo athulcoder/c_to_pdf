@@ -2,21 +2,64 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>C Runner</title>
+  <title>C Runner Terminal</title>
   <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
   <style>
     body {
-      font-family: monospace;
+      font-family: "Courier New", monospace;
+      background: #1e1e1e;
+      color: #d4d4d4;
       padding: 20px;
     }
+
+    h2 {
+      color: #61dafb;
+    }
+
     .terminal {
-      background: black;
-      color: green;
+      background: #000000;
+      color: #00ff00;
       padding: 15px;
-      height: 300px;
+      height: 350px;
       overflow-y: auto;
       white-space: pre-wrap;
-      border-radius: 5px;
+      border-radius: 6px;
+      box-shadow: 0 0 8px #0f0;
+      font-size: 14px;
+      line-height: 1.4;
+      caret-color: #00ff00;
+    }
+
+    .terminal:focus {
+      outline: none;
+    }
+
+    form,
+    button {
+      margin-top: 10px;
+    }
+
+    input[type="file"] {
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
+      padding: 6px;
+      border-radius: 4px;
+    }
+
+    button {
+      background: #61dafb;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-weight: bold;
+      cursor: pointer;
+      color: #000;
+      margin-left: 5px;
+    }
+
+    button:hover {
+      background: #21a1f1;
     }
   </style>
 </head>
@@ -29,16 +72,18 @@
   </form>
 
   <br />
-
-  <textarea id="inputBox" placeholder="Enter input for program" rows="4" cols="50"></textarea><br />
   <button onclick="runCode()">▶ Run</button>
 
-  <div class="terminal" id="terminal"></div>
+  <div class="terminal" id="terminal" tabindex="0"></div>
 
   <script>
-    const socket = io(); // connect to Flask-SocketIO
+    const socket = io();
     let sessionId = null;
+    let inputBuffer = "";
 
+    const terminal = document.getElementById("terminal");
+
+    // Handle file upload
     document.getElementById("uploadForm").addEventListener("submit", async function (e) {
       e.preventDefault();
       const formData = new FormData(this);
@@ -49,39 +94,57 @@
       });
 
       const data = await res.json();
-      console.log(data);
 
       if (data.success) {
         sessionId = data.session;
-        alert("Compiled successfully. Now press ▶ Run.");
+        terminal.textContent = "";
+        appendToTerminal("Compiled successfully. Press ▶ Run.\n");
       } else {
-        document.getElementById("terminal").innerText = data.output || "Compilation failed.";
+        terminal.textContent = data.output || "Compilation failed.";
       }
     });
 
+    // Run the compiled binary
     function runCode() {
       if (!sessionId) {
         alert("Please upload and compile a file first.");
         return;
       }
-
-      // Start execution
+      terminal.focus();
       socket.emit("start_execution", { session: sessionId });
-
-      // Send input (if any)
-      const input = document.getElementById("inputBox").value;
-      if (input.trim() !== "") {
-        socket.emit("send_input", {
-          session: sessionId,
-          input: input + "\n",
-        });
-      }
     }
 
-    socket.on("terminal_output", function (data) {
-      const terminal = document.getElementById("terminal");
-      terminal.textContent += data;
+    // Append text to terminal
+    function appendToTerminal(text) {
+      terminal.textContent += text;
       terminal.scrollTop = terminal.scrollHeight;
+    }
+
+    // Handle incoming output from server
+    socket.on("terminal_output", function (data) {
+      appendToTerminal(data);
+    });
+
+    // Terminal input handling (real-time)
+    terminal.addEventListener("keydown", function (e) {
+      if (!sessionId) return;
+
+      if (e.key === "Enter") {
+        socket.emit("send_input", {
+          session: sessionId,
+          input: inputBuffer + "\n",
+        });
+        appendToTerminal(inputBuffer + "\n");
+        inputBuffer = "";
+      } else if (e.key === "Backspace") {
+        inputBuffer = inputBuffer.slice(0, -1);
+        terminal.textContent = terminal.textContent.slice(0, -1);
+      } else if (e.key.length === 1) {
+        inputBuffer += e.key;
+        appendToTerminal(e.key);
+      }
+
+      e.preventDefault(); // prevent browser scrolling, etc.
     });
   </script>
 </body>
