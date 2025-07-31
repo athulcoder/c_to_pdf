@@ -19,7 +19,7 @@ def generate_pdf(c_file_path, student_name, roll_no, date_str, output_text, outp
         code_lines = [line.rstrip() for line in f.readlines()]
 
     # Prepare output comment for the bottom
-    footer_lines = ["", "/************************OUTPUT************************"] + [f"// {line}" for line in output_text.strip().splitlines()]+ ["*/"]
+    footer_lines = ["", "/*****************OUTPUT************************"] + [f" {line}" for line in output_text.strip().splitlines()]+ ["*/"]
 
     # Combine all lines: header + code + footer
     full_lines = header_lines + code_lines + footer_lines
@@ -28,7 +28,7 @@ def generate_pdf(c_file_path, student_name, roll_no, date_str, output_text, outp
     style = ParagraphStyle(
         name='Code',
         fontName='Courier',
-        fontSize=8,
+        fontSize=10,
         leading=9.5,
         spaceBefore=0,
         spaceAfter=0
