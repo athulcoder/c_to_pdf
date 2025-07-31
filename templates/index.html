@@ -1,70 +1,88 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>C Runner</title>
-    <style>
-      body {
-        font-family: monospace;
-        padding: 20px;
-      }
-      .terminal {
-        background: black;
-        color: green;
-        padding: 15px;
-        height: 300px;
-        overflow-y: auto;
-        white-space: pre-wrap;
-        border-radius: 5px;
-      }
-    </style>
-  </head>
-  <body>
-    <h2>Run C File</h2>
-    <form id="uploadForm">
-      <input type="file" name="cfile" required />
-      <button type="submit">Upload</button>
-    </form>
-    <br />
-    <textarea
-      id="inputBox"
-      placeholder="Enter input for program"
-      rows="4"
-      cols="50"
-    ></textarea
-    ><br />
-    <button onclick="runCode()">▶ Run</button>
-    <div class="terminal" id="terminal"></div>
+<head>
+  <meta charset="UTF-8" />
+  <title>C Runner</title>
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <style>
+    body {
+      font-family: monospace;
+      padding: 20px;
+    }
+    .terminal {
+      background: black;
+      color: green;
+      padding: 15px;
+      height: 300px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Run C File</h2>
 
-    <script>
-      document
-        .getElementById("uploadForm")
-        .addEventListener("submit", async function (e) {
-          e.preventDefault();
-          const formData = new FormData(this);
-          const res = await fetch("/upload", {
-            method: "POST",
-            body: formData,
-          });
-          const data = await res.json();
-          if (data.status === "success") {
-            alert("Compiled successfully. Now press ▶ Run.");
-          } else {
-            document.getElementById("terminal").innerText = data.output;
-          }
+  <form id="uploadForm">
+    <input type="file" name="cfile" required />
+    <button type="submit">Upload</button>
+  </form>
+
+  <br />
+
+  <textarea id="inputBox" placeholder="Enter input for program" rows="4" cols="50"></textarea><br />
+  <button onclick="runCode()">▶ Run</button>
+
+  <div class="terminal" id="terminal"></div>
+
+  <script>
+    const socket = io(); // connect to Flask-SocketIO
+    let sessionId = null;
+
+    document.getElementById("uploadForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+
+      const res = await fetch("/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      console.log(data);
+
+      if (data.success) {
+        sessionId = data.session;
+        alert("Compiled successfully. Now press ▶ Run.");
+      } else {
+        document.getElementById("terminal").innerText = data.output || "Compilation failed.";
+      }
+    });
+
+    function runCode() {
+      if (!sessionId) {
+        alert("Please upload and compile a file first.");
+        return;
+      }
+
+      // Start execution
+      socket.emit("start_execution", { session: sessionId });
+
+      // Send input (if any)
+      const input = document.getElementById("inputBox").value;
+      if (input.trim() !== "") {
+        socket.emit("send_input", {
+          session: sessionId,
+          input: input + "\n",
         });
-
-      async function runCode() {
-        const input = document.getElementById("inputBox").value;
-        const res = await fetch("/run", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ input }),
-        });
-
-        const data = await res.json();
-        document.getElementById("terminal").innerText = data.output;
       }
-    </script>
-  </body>
+    }
+
+    socket.on("terminal_output", function (data) {
+      const terminal = document.getElementById("terminal");
+      terminal.textContent += data;
+      terminal.scrollTop = terminal.scrollHeight;
+    });
+  </script>
+</body>
 </html>

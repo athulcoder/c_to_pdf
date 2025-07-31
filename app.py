@@ -5,6 +5,9 @@ import pty
 import select
 import shlex
 
+import eventlet
+eventlet.monkey_patch()  # add this at the top
+
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit
 
@@ -12,7 +15,7 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-socketio = SocketIO(app, cors_allowed_origins="*")
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
 
 sessions = {}
 
@@ -27,7 +30,7 @@ def upload():
     file.save(filename)
 
     exec_name = filename.replace(".c", ".out")
-    compile_proc = subprocess.run(["gcc", filename, "-o", exec_name], capture_output=True, text=True)
+    compile_proc = subprocess.run(["gcc", "-w", filename, "-o", exec_name], capture_output=True, text=True)
 
     if compile_proc.returncode != 0:
         return {"success": False, "output": compile_proc.stderr}
@@ -67,3 +70,9 @@ def handle_input(data):
     fd = sessions.get(session_id, {}).get("fd")
     if fd:
         os.write(fd, user_input.encode())
+
+
+
+
+if __name__ == "__main__":
+    socketio.run(app, debug=True)
