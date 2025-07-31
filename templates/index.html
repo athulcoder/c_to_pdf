@@ -66,10 +66,16 @@
 <body>
   <h2>Run C File</h2>
 
+
   <form id="uploadForm">
     <input type="file" name="cfile" required />
     <button type="submit">Upload</button>
   </form>
+
+<input type="text" id="name" placeholder="Student Name" required><br>
+<input type="text" id="rollno" placeholder="Roll No" required><br>
+<input type="date" id="date" required><br><br>
+<button onclick="generatePDF()">📄 Generate PDF</button>
 
   <br />
   <button onclick="runCode()">▶ Run</button>
@@ -146,6 +152,35 @@
 
       e.preventDefault(); // prevent browser scrolling, etc.
     });
+
+    function generatePDF() {
+  if (!sessionId) {
+    alert("Run a program first.");
+    return;
+  }
+
+  const name = document.getElementById("name").value;
+  const rollno = document.getElementById("rollno").value;
+  const date = document.getElementById("date").value;
+  const output = document.getElementById("terminal").innerText;
+
+  socket.emit("generate_pdf", {
+    session: sessionId,
+    name,
+    rollno,
+    date,
+    output,
+  });
+}
+
+socket.on("pdf_generated", (data) => {
+  if (data.success) {
+    window.open(data.pdf_url, "_blank");
+  } else {
+    alert("Failed to generate PDF: " + data.error);
+  }
+});
+
   </script>
 </body>
 </html>

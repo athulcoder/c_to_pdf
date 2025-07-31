@@ -4,7 +4,8 @@ import subprocess
 import pty
 import select
 import shlex
-
+from flask import send_from_directory
+from generate_pdf import generate_pdf
 import eventlet
 eventlet.monkey_patch()  # add this at the top
 
@@ -72,6 +73,33 @@ def handle_input(data):
         os.write(fd, user_input.encode())
 
 
+
+@app.route("/download/<filename>")
+def download_pdf(filename):
+    return send_from_directory(app.config["UPLOAD_FOLDER"], filename, as_attachment=True)
+
+@socketio.on("generate_pdf")
+def handle_generate_pdf(data):
+    session_id = data.get("session")
+    name = data.get("name")
+    rollno = data.get("rollno")
+    date = data.get("date")
+    output = data.get("output", "")
+
+    session = sessions.get(session_id)
+    if not session:
+        emit("pdf_generated", {"success": False, "error": "Invalid session"})
+        return
+
+    c_file_path = session["exec"].replace(".out", ".c")
+    pdf_name = f"{uuid.uuid4().hex}.pdf"
+    pdf_path = os.path.join(app.config["UPLOAD_FOLDER"], pdf_name)
+
+    try:
+        generate_pdf(c_file_path, name, rollno, date, output, pdf_path)
+        emit("pdf_generated", {"success": True, "pdf_url": f"/download/{pdf_name}"})
+    except Exception as e:
+        emit("pdf_generated", {"success": False, "error": str(e)})
 
 
 if __name__ == "__main__":
