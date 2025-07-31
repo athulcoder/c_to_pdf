@@ -1,69 +1,69 @@
 import os
-import subprocess
 import uuid
-from flask import Flask, request, jsonify
-from werkzeug.utils import secure_filename
+import subprocess
+import pty
+import select
+import shlex
+
+from flask import Flask, render_template, request
+from flask_socketio import SocketIO, emit
 
 app = Flask(__name__)
-UPLOAD_FOLDER = "uploads"
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+app.config['UPLOAD_FOLDER'] = 'uploads'
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
+socketio = SocketIO(app, cors_allowed_origins="*")
 
-@app.route("/run", methods=["POST"])
-def run_c_code():
-    cfile = request.files["cfile"]
-    user_input = request.form.get("input", "")
+sessions = {}
 
-    # Save uploaded file
-    filename = secure_filename(cfile.filename)
-    filepath = os.path.join(UPLOAD_FOLDER, filename)
-    cfile.save(filepath)
+@app.route("/")
+def index():
+    return render_template("index.html")
 
-    # Prepare executable path
-    exec_name = f"{uuid.uuid4().hex}.exe"
-    exec_path = os.path.join(UPLOAD_FOLDER, exec_name)
+@app.route("/upload", methods=["POST"])
+def upload():
+    file = request.files["cfile"]
+    filename = os.path.join(app.config['UPLOAD_FOLDER'], f"{uuid.uuid4().hex}.c")
+    file.save(filename)
 
-    # Compile the C file
-    compile_proc = subprocess.run(
-        ["gcc", filepath, "-o", exec_path],
-        capture_output=True,
-        text=True
-    )
+    exec_name = filename.replace(".c", ".out")
+    compile_proc = subprocess.run(["gcc", filename, "-o", exec_name], capture_output=True, text=True)
 
     if compile_proc.returncode != 0:
-        return jsonify({
-            "status": "error",
-            "output": compile_proc.stderr
-        })
+        return {"success": False, "output": compile_proc.stderr}
 
-    # Run the executable and feed user input (stdin)
-    try:
-        run_proc = subprocess.run(
-            [exec_path],
-            input=user_input,
-            capture_output=True,
-            text=True,
-            timeout=10,  # prevent infinite loops
-            shell=True  # required for Windows
-        )
+    session_id = uuid.uuid4().hex
+    sessions[session_id] = {"exec": exec_name}
+    return {"success": True, "session": session_id}
 
-        if run_proc.returncode != 0:
-            output = f"Runtime Error:\n{run_proc.stderr}"
-        else:
-            output = run_proc.stdout
+@socketio.on("start_execution")
+def handle_execution(data):
+    session_id = data.get("session")
+    exec_path = sessions.get(session_id, {}).get("exec")
+    if not exec_path:
+        emit("terminal_output", "Executable not found.\n")
+        return
 
-        return jsonify({
-            "status": "success",
-            "output": output
-        })
+    pid, fd = pty.fork()
+    if pid == 0:
+        os.execv(exec_path, [exec_path])
+    else:
+        sessions[session_id]["fd"] = fd
+        sessions[session_id]["pid"] = pid
 
-    except subprocess.TimeoutExpired:
-        return jsonify({
-            "status": "error",
-            "output": "Error: Program timed out. (Possible infinite loop)"
-        })
+        while True:
+            r, _, _ = select.select([fd], [], [], 0.1)
+            if fd in r:
+                try:
+                    output = os.read(fd, 1024).decode()
+                    socketio.emit("terminal_output", output)
+                except:
+                    break
 
-
-if __name__ == "__main__":
-    app.run(debug=True)
+@socketio.on("send_input")
+def handle_input(data):
+    session_id = data.get("session")
+    user_input = data.get("input", "")
+    fd = sessions.get(session_id, {}).get("fd")
+    if fd:
+        os.write(fd, user_input.encode())

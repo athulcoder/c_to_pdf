@@ -2,96 +2,69 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>C File Runner</title>
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-    />
+    <title>C Runner</title>
     <style>
       body {
-        background: #0f172a;
-        color: white;
         font-family: monospace;
+        padding: 20px;
       }
       .terminal {
-        background-color: #000;
-        color: #0f0;
+        background: black;
+        color: green;
         padding: 15px;
-        border-radius: 8px;
         height: 300px;
         overflow-y: auto;
-        font-size: 14px;
         white-space: pre-wrap;
-      }
-      .file-label {
-        margin-top: 1rem;
-      }
-      #run-btn {
-        background-color: #10b981;
-        border: none;
+        border-radius: 5px;
       }
     </style>
   </head>
-  <body class="container py-5">
-    <h1 class="mb-4">🧠 C Program Runner</h1>
-
-    <form id="codeForm" enctype="multipart/form-data">
-      <div class="mb-3">
-        <label for="cfile" class="form-label">Upload C File (.c):</label>
-        <input
-          class="form-control"
-          type="file"
-          id="cfile"
-          name="cfile"
-          accept=".c"
-          required
-        />
-      </div>
-
-      <div class="mb-3">
-        <label for="inputText" class="form-label"
-          >Standard Input (if needed):</label
-        >
-        <textarea
-          class="form-control"
-          id="inputText"
-          name="input"
-          rows="3"
-          placeholder="Enter input here..."
-        ></textarea>
-      </div>
-
-      <button id="run-btn" type="submit" class="btn btn-success mb-3">
-        ▶ Run Code
-      </button>
+  <body>
+    <h2>Run C File</h2>
+    <form id="uploadForm">
+      <input type="file" name="cfile" required />
+      <button type="submit">Upload</button>
     </form>
-
-    <div class="terminal" id="output">Output will appear here...</div>
+    <br />
+    <textarea
+      id="inputBox"
+      placeholder="Enter input for program"
+      rows="4"
+      cols="50"
+    ></textarea
+    ><br />
+    <button onclick="runCode()">▶ Run</button>
+    <div class="terminal" id="terminal"></div>
 
     <script>
-      const form = document.getElementById("codeForm");
-      const outputBox = document.getElementById("output");
-
-      form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        outputBox.textContent = "⏳ Running your code...";
-
-        const formData = new FormData(form);
-
-        try {
-          const response = await fetch("/run", {
+      document
+        .getElementById("uploadForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+          const formData = new FormData(this);
+          const res = await fetch("/upload", {
             method: "POST",
             body: formData,
           });
+          const data = await res.json();
+          if (data.status === "success") {
+            alert("Compiled successfully. Now press ▶ Run.");
+          } else {
+            document.getElementById("terminal").innerText = data.output;
+          }
+        });
 
-          const data = await response.json();
-          outputBox.textContent = data.output;
-          outputBox.scrollTop = outputBox.scrollHeight;
-        } catch (error) {
-          outputBox.textContent = "❌ Error connecting to server.";
-        }
-      });
+      async function runCode() {
+        const input = document.getElementById("inputBox").value;
+        const res = await fetch("/run", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ input }),
+        });
+
+        const data = await res.json();
+        document.getElementById("terminal").innerText = data.output;
+      }
     </script>
   </body>
 </html>
