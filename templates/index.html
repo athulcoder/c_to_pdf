@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>C to PDF Converter</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        max-width: 600px;
+        margin: 2rem auto;
+      }
+      input,
+      button {
+        margin-top: 1rem;
+        width: 100%;
+        padding: 0.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>C File to PDF Converter</h2>
+    <form method="POST" enctype="multipart/form-data">
+      <input type="text" name="name" placeholder="Student Name" required />
+      <input type="text" name="roll" placeholder="Roll Number" required />
+      <input type="date" name="date" />
+      <input type="file" name="cfile" accept=".c" required />
+      <button type="submit">Generate PDF</button>
+    </form>
+  </body>
+</html>
