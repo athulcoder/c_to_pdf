@@ -1,5 +1,5 @@
-gunicorn
-eventlet
-flask
-flask-socketio
-reportlab
+Flask==2.3.3
+Flask-SocketIO==5.3.6
+gunicorn==21.2.0
+eventlet==0.33.3
+reportlab==4.1.0
