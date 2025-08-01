@@ -1,0 +1,9 @@
+startCommand: gunicorn wsgi:appservices:
+  - type: web
+    name: flask-socketio-app
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
+    envVars:
+      - key: PORT
+        value: 10000
