@@ -1,4 +1,4 @@
-startCommand: gunicorn wsgi:appservices:
+services:
   - type: web
     name: flask-socketio-app
     runtime: python
