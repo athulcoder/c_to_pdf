@@ -6,4 +6,4 @@ services:
     startCommand: python main.py
     envVars:
       - key: PORT
-        value: 10000
+        value: 8000
