@@ -2,111 +2,36 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>C File to PDF Converter</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
   <style>
     :root {
       --bg-color: #1e1e1e;
       --text-color: #d4d4d4;
-      --accent: #61dafb;
+      --accent-color: #61dafb;
       --input-bg: #2c2c2c;
       --input-border: #555;
-      --input-focus: #00bfff;
+    }
+
+    body {
+      font-family: "Courier New", monospace;
+      background: var(--bg-color);
+      color: var(--text-color);
+      padding: 20px;
+      margin: 0;
     }
 
     body.light {
       --bg-color: #f4f4f4;
       --text-color: #222;
-      --accent: #007acc;
-      --input-bg: #ffffff;
+      --input-bg: #fff;
       --input-border: #ccc;
-      --input-focus: #007acc;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      padding: 20px;
-      font-family: 'Courier New', monospace;
-      background: var(--bg-color);
-      color: var(--text-color);
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
     }
 
     h2 {
-      margin-top: 0;
-      color: var(--accent);
-    }
-
-    form, .form-group, button {
-      margin-top: 10px;
-    }
-
-    input[type="file"] {
-      background: var(--input-bg);
-      color: var(--text-color);
-      border: 1px solid var(--input-border);
-      padding: 8px;
-      border-radius: 6px;
-      width: 100%;
-    }
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 15px;
-      margin-top: 20px;
-    }
-
-    .form-group label {
-      display: block;
-      margin-bottom: 6px;
-      font-size: 14px;
-      color: var(--accent);
-    }
-
-    .form-group input {
-      width: 100%;
-      background: var(--input-bg);
-      color: var(--text-color);
-      border: 2px solid var(--input-border);
-      padding: 10px;
-      border-radius: 6px;
-      transition: border 0.3s, box-shadow 0.3s;
-    }
-
-    .form-group input:focus {
-      border-color: var(--input-focus);
-      box-shadow: 0 0 6px var(--input-focus);
-      outline: none;
-    }
-
-    .actions {
-      margin-top: 15px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    button {
-      background: var(--accent);
-      color: #000;
-      padding: 10px 16px;
-      border: none;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-
-    button:hover {
-      background: var(--input-focus);
+      color: var(--accent-color);
+      margin-bottom: 10px;
     }
 
     .terminal {
@@ -120,41 +45,71 @@
       box-shadow: 0 0 8px #0f0;
       font-size: 14px;
       line-height: 1.4;
-      caret-color: #00ff00;
+      margin-top: 15px;
+    }
+
+    input[type="file"],
+    button,
+    input,
+    label {
+      font-family: inherit;
+      font-size: 16px;
+    }
+
+    input[type="file"] {
+      background: var(--input-bg);
+      color: var(--text-color);
+      border: 1px solid var(--input-border);
+      padding: 6px;
+      border-radius: 4px;
+    }
+
+    button {
+      background: var(--accent-color);
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-weight: bold;
+      cursor: pointer;
+      color: #000;
+      margin: 5px 0;
+    }
+
+    button:hover {
+      background: #21a1f1;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    label {
+      margin-bottom: 4px;
+      font-weight: bold;
+    }
+
+    .form-grid input {
+      background: var(--input-bg);
+      color: var(--text-color);
+      border: 1px solid var(--input-border);
+      padding: 8px;
+      border-radius: 4px;
+    }
+
+    .actions {
       margin-top: 15px;
     }
 
     #generateBtn {
       display: none;
-    }
-
-    footer {
-      margin-top: auto;
-      padding: 20px;
-      text-align: center;
-      background: #111;
-      color: #888;
-      font-size: 14px;
-      border-top: 1px solid #333;
-    }
-
-    footer a {
-      color: var(--accent);
-      text-decoration: none;
-    }
-
-    .toggle-container {
-      display: flex;
-      justify-content: flex-end;
-      margin-top: -10px;
-    }
-
-    .toggle-container button {
-      background: transparent;
-      border: 1px solid var(--input-border);
-      color: var(--accent);
-      font-size: 14px;
-      padding: 6px 12px;
     }
 
     #mobileInput {
@@ -165,41 +120,61 @@
       top: -9999px;
     }
 
+    .dark-toggle {
+      float: right;
+      background: transparent;
+      border: 1px solid var(--accent-color);
+      color: var(--accent-color);
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: -10px;
+      margin-bottom: 20px;
+    }
+
     @media (max-width: 600px) {
       .form-grid {
         grid-template-columns: 1fr;
       }
+    }
 
-      .actions {
-        flex-direction: column;
-      }
+    footer {
+      margin-top: 40px;
+      padding: 20px;
+      text-align: center;
+      background: #111;
+      color: #888;
+      font-size: 14px;
+      border-top: 1px solid #333;
+    }
+
+    footer a {
+      color: #61dafb;
+      text-decoration: none;
     }
   </style>
 </head>
 
 <body>
-  <div class="toggle-container">
-    <button onclick="toggleDarkMode()">🌗 Toggle Theme</button>
-  </div>
-
-  <h2>Run C File</h2>
+  <button class="dark-toggle" onclick="toggleDarkMode()">🌓 Toggle Dark Mode</button>
+  <h2>C File to PDF Converter</h2>
 
   <form id="uploadForm">
     <input type="file" name="cfile" required />
-    <button type="submit">Upload</button>
+    <button type="submit">📤 Upload</button>
   </form>
 
   <div class="form-grid">
     <div class="form-group">
-      <label for="name">Student Name *</label>
-      <input type="text" id="name" required />
+      <label for="name">👤 Student Name <span style="color:red">*</span></label>
+      <input type="text" id="name" placeholder="Enter full name" required />
     </div>
     <div class="form-group">
-      <label for="rollno">Roll No *</label>
-      <input type="text" id="rollno" required />
+      <label for="rollno">🆔 Roll No <span style="color:red">*</span></label>
+      <input type="text" id="rollno" placeholder="Enter roll number" required />
     </div>
     <div class="form-group">
-      <label for="date">Date *</label>
+      <label for="date">📅 Date <span style="color:red">*</span></label>
       <input type="date" id="date" required />
     </div>
   </div>
@@ -209,11 +184,12 @@
     <button id="generateBtn" onclick="generatePDF()">📄 Generate PDF</button>
   </div>
 
-  <div class="terminal" id="terminal" tabindex="0"></div>
+  <div class="terminal" id="terminal" tabindex="0" onclick="focusInput()"></div>
   <input type="text" id="mobileInput" autocomplete="off" />
 
   <footer>
-    Built by <a href="https://github.com/athulcoder" target="_blank">athulcoder</a>
+    Built by
+    <a href="https://github.com/athulcoder" target="_blank">athulcoder</a>
   </footer>
 
   <script>
@@ -224,6 +200,18 @@
     const terminal = document.getElementById("terminal");
     const generateBtn = document.getElementById("generateBtn");
     const mobileInput = document.getElementById("mobileInput");
+
+    function appendToTerminal(text) {
+      terminal.textContent += text;
+      terminal.scrollTop = terminal.scrollHeight;
+    }
+
+    function focusInput() {
+      mobileInput.focus();
+      setTimeout(() => {
+        mobileInput.scrollIntoView({ block: "end" });
+      }, 100);
+    }
 
     document.getElementById("uploadForm").addEventListener("submit", async function (e) {
       e.preventDefault();
@@ -250,24 +238,17 @@
         alert("Please upload and compile a file first.");
         return;
       }
-      terminal.focus();
       socket.emit("start_execution", { session: sessionId });
-      mobileInput.focus();
+      focusInput();
       generateBtn.style.display = "inline-block";
-    }
-
-    function appendToTerminal(text) {
-      terminal.textContent += text;
-      terminal.scrollTop = terminal.scrollHeight;
     }
 
     socket.on("terminal_output", function (data) {
       appendToTerminal(data);
+      focusInput();
     });
 
-    terminal.addEventListener("click", () => mobileInput.focus());
-
-    terminal.addEventListener("keydown", function (e) {
+    mobileInput.addEventListener("keydown", function (e) {
       if (!sessionId) return;
 
       if (e.key === "Enter") {
@@ -277,31 +258,15 @@
         });
         appendToTerminal(inputBuffer + "\n");
         inputBuffer = "";
+        mobileInput.value = "";
+        e.preventDefault();
       } else if (e.key === "Backspace") {
         inputBuffer = inputBuffer.slice(0, -1);
         terminal.textContent = terminal.textContent.slice(0, -1);
+        e.preventDefault();
       } else if (e.key.length === 1) {
         inputBuffer += e.key;
         appendToTerminal(e.key);
-      }
-
-      e.preventDefault();
-    });
-
-    mobileInput.addEventListener("input", function () {
-      const value = this.value;
-      if (value.endsWith("\n")) {
-        socket.emit("send_input", {
-          session: sessionId,
-          input: inputBuffer + "\n",
-        });
-        appendToTerminal(inputBuffer + "\n");
-        inputBuffer = "";
-        this.value = "";
-      } else {
-        const newChar = value[value.length - 1];
-        inputBuffer += newChar;
-        appendToTerminal(newChar);
       }
     });
 
@@ -342,6 +307,8 @@
     function toggleDarkMode() {
       document.body.classList.toggle("light");
     }
+
+    window.addEventListener("load", focusInput);
   </script>
 </body>
 </html>
