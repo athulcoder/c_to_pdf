@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>C File to PDF Converter</title>
   <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
   <style>
     :root {
       --bg: #1e1e1e;
@@ -80,6 +82,10 @@
       cursor: pointer;
     }
 
+    button i {
+      margin-right: 5px;
+    }
+
     button:hover {
       opacity: 0.9;
     }
@@ -99,6 +105,10 @@
       position: absolute;
       right: 20px;
       top: 20px;
+      font-size: 20px;
+      background: transparent;
+      border: none;
+      color: var(--accent);
     }
 
     footer {
@@ -115,6 +125,18 @@
       text-decoration: none;
     }
 
+    .terminal-input {
+      margin-top: 10px;
+      width: 100%;
+      padding: 8px;
+      border: none;
+      background: #111;
+      color: var(--terminal-text);
+      font-family: "Courier New", monospace;
+      font-size: 14px;
+      border-radius: 6px;
+    }
+
     @media (max-width: 600px) {
       .terminal {
         height: 250px;
@@ -123,13 +145,15 @@
   </style>
 </head>
 <body>
-  <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
+  <button class="theme-toggle" onclick="toggleTheme()">
+    <i id="theme-icon" class="fas fa-moon"></i>
+  </button>
 
   <h2>C File to PDF Converter</h2>
 
   <form id="uploadForm">
     <input type="file" name="cfile" required />
-    <button type="submit">Upload</button>
+    <button type="submit"><i class="fas fa-upload"></i> Upload</button>
   </form>
 
   <div class="form-grid">
@@ -143,11 +167,11 @@
     <input type="date" id="date" required />
   </div>
 
-  <button onclick="runCode()">▶ Run</button>
-  <button id="generateBtn" onclick="generatePDF()">📄 Generate PDF</button>
+  <button onclick="runCode()"><i class="fas fa-play"></i> Run</button>
+  <button id="generateBtn" onclick="generatePDF()"><i class="fas fa-file-pdf"></i> Generate PDF</button>
 
-  <div class="terminal" id="terminal" tabindex="0"></div>
-  <input type="text" id="hiddenInput" style="position:absolute;opacity:0;pointer-events:none;" />
+  <div class="terminal" id="terminal"></div>
+  <input type="text" id="terminalInput" class="terminal-input" placeholder="Type here..." />
 
   <footer>
     Built by <a href="https://github.com/athulcoder" target="_blank">athulcoder</a>
@@ -156,11 +180,11 @@
   <script>
     const socket = io();
     let sessionId = null;
-    let inputBuffer = "";
 
     const terminal = document.getElementById("terminal");
     const generateBtn = document.getElementById("generateBtn");
-    const hiddenInput = document.getElementById("hiddenInput");
+    const terminalInput = document.getElementById("terminalInput");
+    const themeIcon = document.getElementById("theme-icon");
 
     document.getElementById("uploadForm").addEventListener("submit", async function (e) {
       e.preventDefault();
@@ -188,7 +212,7 @@
       }
       socket.emit("start_execution", { session: sessionId });
       generateBtn.style.display = "inline-block";
-      hiddenInput.focus();
+      terminalInput.focus();
     }
 
     function appendToTerminal(text) {
@@ -196,35 +220,19 @@
       terminal.scrollTop = terminal.scrollHeight;
     }
 
-    terminal.addEventListener("click", () => {
-      hiddenInput.focus();
-    });
-
-    hiddenInput.addEventListener("keydown", function (e) {
+    terminalInput.addEventListener("keydown", function (e) {
       if (!sessionId) return;
+
       if (e.key === "Enter") {
+        const value = terminalInput.value;
         socket.emit("send_input", {
           session: sessionId,
-          input: inputBuffer + "\n",
+          input: value + "\n",
         });
-        appendToTerminal(inputBuffer + "\n");
-        inputBuffer = "";
-        e.preventDefault();
-      } else if (e.key === "Backspace") {
-        inputBuffer = inputBuffer.slice(0, -1);
-        terminal.textContent = terminal.textContent.slice(0, -1);
-        e.preventDefault();
-      } else if (e.key.length === 1) {
-        inputBuffer += e.key;
-        appendToTerminal(e.key);
+        appendToTerminal(value + "\n");
+        terminalInput.value = "";
         e.preventDefault();
       }
-    });
-
-    hiddenInput.addEventListener("focus", () => {
-      setTimeout(() => {
-        terminal.scrollIntoView({ behavior: "smooth", block: "end" });
-      }, 300);
     });
 
     function generatePDF() {
@@ -261,6 +269,8 @@
 
     function toggleTheme() {
       document.body.classList.toggle("light");
+      themeIcon.classList.toggle("fa-moon");
+      themeIcon.classList.toggle("fa-sun");
     }
   </script>
 </body>
