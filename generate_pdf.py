@@ -1,5 +1,5 @@
 from reportlab.platypus import SimpleDocTemplate, Frame, PageTemplate, Paragraph
-from reportlab.platypus.flowables import FrameBreak
+from reportlab.platypus import FrameBreak
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
