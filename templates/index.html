@@ -2,22 +2,115 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>C File to Pdf Converter</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>C File to PDF Converter</title>
   <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
   <style>
+    :root {
+      --bg-color: #1e1e1e;
+      --text-color: #d4d4d4;
+      --accent: #61dafb;
+      --input-bg: #2c2c2c;
+      --input-border: #555;
+      --input-focus: #00bfff;
+    }
+
+    body.light {
+      --bg-color: #f4f4f4;
+      --text-color: #222;
+      --accent: #007acc;
+      --input-bg: #ffffff;
+      --input-border: #ccc;
+      --input-focus: #007acc;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: "Courier New", monospace;
-      background: #1e1e1e;
-      color: #d4d4d4;
+      margin: 0;
       padding: 20px;
+      font-family: 'Courier New', monospace;
+      background: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
     }
 
     h2 {
-      color: #61dafb;
+      margin-top: 0;
+      color: var(--accent);
+    }
+
+    form, .form-group, button {
+      margin-top: 10px;
+    }
+
+    input[type="file"] {
+      background: var(--input-bg);
+      color: var(--text-color);
+      border: 1px solid var(--input-border);
+      padding: 8px;
+      border-radius: 6px;
+      width: 100%;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 14px;
+      color: var(--accent);
+    }
+
+    .form-group input {
+      width: 100%;
+      background: var(--input-bg);
+      color: var(--text-color);
+      border: 2px solid var(--input-border);
+      padding: 10px;
+      border-radius: 6px;
+      transition: border 0.3s, box-shadow 0.3s;
+    }
+
+    .form-group input:focus {
+      border-color: var(--input-focus);
+      box-shadow: 0 0 6px var(--input-focus);
+      outline: none;
+    }
+
+    .actions {
+      margin-top: 15px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    button {
+      background: var(--accent);
+      color: #000;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: var(--input-focus);
     }
 
     .terminal {
-      background: #000000;
+      background: #000;
       color: #00ff00;
       padding: 15px;
       height: 350px;
@@ -28,66 +121,67 @@
       font-size: 14px;
       line-height: 1.4;
       caret-color: #00ff00;
-    }
-
-    .terminal:focus {
-      outline: none;
-    }
-
-    form,
-    button {
-      margin-top: 10px;
-    }
-
-    input[type="file"] {
-      background: #333;
-      color: #fff;
-      border: 1px solid #555;
-      padding: 6px;
-      border-radius: 4px;
-    }
-
-    button {
-      background: #61dafb;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 4px;
-      font-weight: bold;
-      cursor: pointer;
-      color: #000;
-      margin-left: 5px;
-    }
-
-    button:hover {
-      background: #21a1f1;
-    }
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 10px;
       margin-top: 15px;
-    }
-
-    .form-grid input {
-      background: #2c2c2c;
-      color: #fff;
-      border: 1px solid #555;
-      padding: 8px;
-      border-radius: 4px;
-    }
-
-    .actions {
-      margin-top: 10px;
     }
 
     #generateBtn {
       display: none;
     }
+
+    footer {
+      margin-top: auto;
+      padding: 20px;
+      text-align: center;
+      background: #111;
+      color: #888;
+      font-size: 14px;
+      border-top: 1px solid #333;
+    }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .toggle-container {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: -10px;
+    }
+
+    .toggle-container button {
+      background: transparent;
+      border: 1px solid var(--input-border);
+      color: var(--accent);
+      font-size: 14px;
+      padding: 6px 12px;
+    }
+
+    #mobileInput {
+      position: absolute;
+      opacity: 0;
+      height: 1px;
+      width: 1px;
+      top: -9999px;
+    }
+
+    @media (max-width: 600px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .actions {
+        flex-direction: column;
+      }
+    }
   </style>
 </head>
 
 <body>
+  <div class="toggle-container">
+    <button onclick="toggleDarkMode()">🌗 Toggle Theme</button>
+  </div>
+
   <h2>Run C File</h2>
 
   <form id="uploadForm">
@@ -96,9 +190,18 @@
   </form>
 
   <div class="form-grid">
-    <input type="text" id="name" placeholder="Student Name" required />
-    <input type="text" id="rollno" placeholder="Roll No" required />
-    <input type="date" id="date" required />
+    <div class="form-group">
+      <label for="name">Student Name *</label>
+      <input type="text" id="name" required />
+    </div>
+    <div class="form-group">
+      <label for="rollno">Roll No *</label>
+      <input type="text" id="rollno" required />
+    </div>
+    <div class="form-group">
+      <label for="date">Date *</label>
+      <input type="date" id="date" required />
+    </div>
   </div>
 
   <div class="actions">
@@ -107,6 +210,11 @@
   </div>
 
   <div class="terminal" id="terminal" tabindex="0"></div>
+  <input type="text" id="mobileInput" autocomplete="off" />
+
+  <footer>
+    Built by <a href="https://github.com/athulcoder" target="_blank">athulcoder</a>
+  </footer>
 
   <script>
     const socket = io();
@@ -115,8 +223,8 @@
 
     const terminal = document.getElementById("terminal");
     const generateBtn = document.getElementById("generateBtn");
+    const mobileInput = document.getElementById("mobileInput");
 
-    // Handle file upload
     document.getElementById("uploadForm").addEventListener("submit", async function (e) {
       e.preventDefault();
       const formData = new FormData(this);
@@ -137,7 +245,6 @@
       }
     });
 
-    // Run the compiled binary
     function runCode() {
       if (!sessionId) {
         alert("Please upload and compile a file first.");
@@ -145,23 +252,21 @@
       }
       terminal.focus();
       socket.emit("start_execution", { session: sessionId });
-
-      // Show PDF button only after run is clicked
+      mobileInput.focus();
       generateBtn.style.display = "inline-block";
     }
 
-    // Append text to terminal
     function appendToTerminal(text) {
       terminal.textContent += text;
       terminal.scrollTop = terminal.scrollHeight;
     }
 
-    // Handle incoming output from server
     socket.on("terminal_output", function (data) {
       appendToTerminal(data);
     });
 
-    // Terminal input handling
+    terminal.addEventListener("click", () => mobileInput.focus());
+
     terminal.addEventListener("keydown", function (e) {
       if (!sessionId) return;
 
@@ -183,16 +288,39 @@
       e.preventDefault();
     });
 
+    mobileInput.addEventListener("input", function () {
+      const value = this.value;
+      if (value.endsWith("\n")) {
+        socket.emit("send_input", {
+          session: sessionId,
+          input: inputBuffer + "\n",
+        });
+        appendToTerminal(inputBuffer + "\n");
+        inputBuffer = "";
+        this.value = "";
+      } else {
+        const newChar = value[value.length - 1];
+        inputBuffer += newChar;
+        appendToTerminal(newChar);
+      }
+    });
+
     function generatePDF() {
       if (!sessionId) {
         alert("Run a program first.");
         return;
       }
 
-      const name = document.getElementById("name").value;
-      const rollno = document.getElementById("rollno").value;
+      const name = document.getElementById("name").value.trim();
+      const rollno = document.getElementById("rollno").value.trim();
       const date = document.getElementById("date").value;
-      const output = document.getElementById("terminal").innerText;
+
+      if (!name || !rollno || !date) {
+        alert("Please fill in all required fields.");
+        return;
+      }
+
+      const output = terminal.innerText;
 
       socket.emit("generate_pdf", {
         session: sessionId,
@@ -210,25 +338,10 @@
         alert("Failed to generate PDF: " + data.error);
       }
     });
+
+    function toggleDarkMode() {
+      document.body.classList.toggle("light");
+    }
   </script>
-
-    <!-- Footer -->
-  <footer style="
-    margin-top: 40px;
-    padding: 20px;
-    text-align: center;
-    background: #111;
-    color: #888;
-    font-family: 'Courier New', monospace;
-    font-size: 14px;
-    border-top: 1px solid #333;
-  ">
-    Built by 
-    <a href="https://github.com/athulcoder" target="_blank" style="color: #61dafb; text-decoration: none;">
-      athulcoder
-    </a>
-  </footer>
-
 </body>
-
 </html>

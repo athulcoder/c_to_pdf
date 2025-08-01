@@ -28,8 +28,8 @@ def generate_pdf(c_file_path, student_name, roll_no, date_str, output_text, outp
     style = ParagraphStyle(
         name='Code',
         fontName='Courier',
-        fontSize=10,
-        leading=9.5,
+        fontSize=12,
+        leading=14,
         spaceBefore=0,
         spaceAfter=0
     )
@@ -79,3 +79,4 @@ def generate_pdf(c_file_path, student_name, roll_no, date_str, output_text, outp
             i += lines_per_column
 
     doc.build(elements)
+
