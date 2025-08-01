@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>C Runner Terminal</title>
+  <title>C File to Pdf Converter</title>
   <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
   <style>
     body {
@@ -61,24 +61,49 @@
     button:hover {
       background: #21a1f1;
     }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .form-grid input {
+      background: #2c2c2c;
+      color: #fff;
+      border: 1px solid #555;
+      padding: 8px;
+      border-radius: 4px;
+    }
+
+    .actions {
+      margin-top: 10px;
+    }
+
+    #generateBtn {
+      display: none;
+    }
   </style>
 </head>
 <body>
   <h2>Run C File</h2>
-
 
   <form id="uploadForm">
     <input type="file" name="cfile" required />
     <button type="submit">Upload</button>
   </form>
 
-<input type="text" id="name" placeholder="Student Name" required><br>
-<input type="text" id="rollno" placeholder="Roll No" required><br>
-<input type="date" id="date" required><br><br>
-<button onclick="generatePDF()">📄 Generate PDF</button>
+  <div class="form-grid">
+    <input type="text" id="name" placeholder="Student Name" required />
+    <input type="text" id="rollno" placeholder="Roll No" required />
+    <input type="date" id="date" required />
+  </div>
 
-  <br />
-  <button onclick="runCode()">▶ Run</button>
+  <div class="actions">
+    <button onclick="runCode()">▶ Run</button>
+    <button id="generateBtn" onclick="generatePDF()">📄 Generate PDF</button>
+  </div>
 
   <div class="terminal" id="terminal" tabindex="0"></div>
 
@@ -88,6 +113,7 @@
     let inputBuffer = "";
 
     const terminal = document.getElementById("terminal");
+    const generateBtn = document.getElementById("generateBtn");
 
     // Handle file upload
     document.getElementById("uploadForm").addEventListener("submit", async function (e) {
@@ -118,6 +144,9 @@
       }
       terminal.focus();
       socket.emit("start_execution", { session: sessionId });
+
+      // Show PDF button only after run is clicked
+      generateBtn.style.display = "inline-block";
     }
 
     // Append text to terminal
@@ -131,7 +160,7 @@
       appendToTerminal(data);
     });
 
-    // Terminal input handling (real-time)
+    // Terminal input handling
     terminal.addEventListener("keydown", function (e) {
       if (!sessionId) return;
 
@@ -150,37 +179,36 @@
         appendToTerminal(e.key);
       }
 
-      e.preventDefault(); // prevent browser scrolling, etc.
+      e.preventDefault();
     });
 
     function generatePDF() {
-  if (!sessionId) {
-    alert("Run a program first.");
-    return;
-  }
+      if (!sessionId) {
+        alert("Run a program first.");
+        return;
+      }
 
-  const name = document.getElementById("name").value;
-  const rollno = document.getElementById("rollno").value;
-  const date = document.getElementById("date").value;
-  const output = document.getElementById("terminal").innerText;
+      const name = document.getElementById("name").value;
+      const rollno = document.getElementById("rollno").value;
+      const date = document.getElementById("date").value;
+      const output = document.getElementById("terminal").innerText;
 
-  socket.emit("generate_pdf", {
-    session: sessionId,
-    name,
-    rollno,
-    date,
-    output,
-  });
-}
+      socket.emit("generate_pdf", {
+        session: sessionId,
+        name,
+        rollno,
+        date,
+        output,
+      });
+    }
 
-socket.on("pdf_generated", (data) => {
-  if (data.success) {
-    window.open(data.pdf_url, "_blank");
-  } else {
-    alert("Failed to generate PDF: " + data.error);
-  }
-});
-
+    socket.on("pdf_generated", (data) => {
+      if (data.success) {
+        window.open(data.pdf_url, "_blank");
+      } else {
+        alert("Failed to generate PDF: " + data.error);
+      }
+    });
   </script>
 </body>
 </html>
