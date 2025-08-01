@@ -32,8 +32,8 @@ def generate_pdf(c_file_path, student_name, roll_no, date_str, output_text, outp
     style = ParagraphStyle(
         name='Code',
         fontName='Courier',
-        fontSize=11.5,
-        leading=13,
+        fontSize=10,
+        leading=12,
         spaceBefore=0,
         spaceAfter=0,
         alignment=TA_LEFT
