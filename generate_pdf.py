@@ -11,7 +11,7 @@ def generate_pdf(c_file_path, student_name, roll_no, date_str, output_text, outp
     header_lines = [
         "/*****************************",
         f"{student_name}",
-        f"{roll_no}",
+        f"Roll no {roll_no}",
         f"{date_str}",
         "**************************/",
         ""
