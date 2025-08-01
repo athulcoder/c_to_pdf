@@ -1,10 +1,11 @@
+
 from reportlab.platypus import SimpleDocTemplate, Frame, PageTemplate, Paragraph
 from reportlab.platypus import FrameBreak
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from xml.sax.saxutils import escape
-
+from reportlab.lib.enums import TA_LEFT
 def generate_pdf(c_file_path, student_name, roll_no, date_str, output_text, output_pdf):
     
     header_lines = [

@@ -7,7 +7,7 @@ import shlex
 from flask import send_from_directory
 from generate_pdf import generate_pdf
 import eventlet
-eventlet.monkey_patch()  # add this at the top
+eventlet.monkey_patch()  
 
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit
