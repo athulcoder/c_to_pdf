@@ -4,7 +4,7 @@ import subprocess
 import pty
 import select
 import shlex
-from flask import send_from_directory
+from flask import send_from_directory, after_this_request
 from generate_pdf import generate_pdf
 import eventlet
 eventlet.monkey_patch()  
@@ -75,7 +75,19 @@ def handle_input(data):
 
 
 @app.route("/download/<filename>")
+
 def download_pdf(filename):
+    file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+
+    @after_this_request
+    def remove_file(response):
+        try:
+            os.remove(file_path)
+            print(f"Deleted file: {file_path}")
+        except Exception as e:
+            print(f"Error deleting file: {e}")
+        return response
+
     return send_from_directory(app.config["UPLOAD_FOLDER"], filename, as_attachment=True)
 
 @socketio.on("generate_pdf")
