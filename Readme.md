@@ -42,7 +42,3 @@ A web-based tool that allows users to compile and execute C programs, interact w
 - **PDF Generator**: ReportLab
 - **Compiler**: GCC
 - **Hosting**: Render.com
-
----
-
-## Project Structure
