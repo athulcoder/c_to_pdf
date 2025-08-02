@@ -1,280 +1,293 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>C File to PDF Converter</title>
-  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>C File to PDF Converter</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
 
-  <style>
-    :root {
-      --bg: #1e1e1e;
-      --fg: #d4d4d4;
-      --accent: #61dafb;
-      --terminal-bg: #000;
-      --terminal-text: #00ff00;
-    }
+    <style>
+      :root {
+        --bg: #1e1e1e;
+        --fg: #d4d4d4;
+        --accent: #61dafb;
+        --terminal-bg: #000;
+        --terminal-text: #00ff00;
+      }
 
-    body.light {
-      --bg: #f5f5f5;
-      --fg: #333;
-      --accent: #007acc;
-      --terminal-bg: #f0f0f0;
-      --terminal-text: #333;
-    }
+      body.light {
+        --bg: #f5f5f5;
+        --fg: #333;
+        --accent: #007acc;
+        --terminal-bg: #f0f0f0;
+        --terminal-text: #333;
+      }
 
-    body {
-      font-family: "Courier New", monospace;
-      background: var(--bg);
-      color: var(--fg);
-      padding: 16px;
-      margin: 0;
-    }
+      body {
+        font-family: "Courier New", monospace;
+        background: var(--bg);
+        color: var(--fg);
+        padding: 16px;
+        margin: 0;
+      }
 
-    h2 {
-      color: var(--accent);
-      text-align: center;
-    }
+      h2 {
+        color: var(--accent);
+        text-align: center;
+      }
 
-    .terminal {
-      background: var(--terminal-bg);
-      color: var(--terminal-text);
-      padding: 15px;
-      height: 300px;
-      overflow-y: auto;
-      white-space: pre-wrap;
-      border-radius: 6px;
-      box-shadow: 0 0 8px var(--terminal-text);
-      font-size: 14px;
-      line-height: 1.4;
-      margin-top: 10px;
-    }
-
-    input[type="file"],
-    .form-grid input {
-      width: 100%;
-      padding: 8px;
-      margin-top: 5px;
-      border: 1px solid #555;
-      border-radius: 6px;
-      background: #2c2c2c;
-      color: #fff;
-    }
-
-    .form-grid input:focus {
-      outline: 2px solid var(--accent);
-    }
-
-    label {
-      margin-top: 10px;
-      display: block;
-    }
-
-    button {
-      margin-top: 10px;
-      padding: 8px 16px;
-      background: var(--accent);
-      border: none;
-      border-radius: 6px;
-      font-weight: bold;
-      color: #000;
-      cursor: pointer;
-    }
-
-    button i {
-      margin-right: 5px;
-    }
-
-    button:hover {
-      opacity: 0.9;
-    }
-
-    .form-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-top: 15px;
-    }
-
-    #generateBtn {
-      display: none;
-    }
-
-    .theme-toggle {
-      position: absolute;
-      right: 20px;
-      top: 20px;
-      font-size: 20px;
-      background: transparent;
-      border: none;
-      color: var(--accent);
-    }
-
-    footer {
-      text-align: center;
-      font-size: 14px;
-      margin-top: 30px;
-      padding: 10px;
-      border-top: 1px solid #444;
-      color: #888;
-    }
-
-    footer a {
-      color: var(--accent);
-      text-decoration: none;
-    }
-
-    .terminal-input {
-      margin-top: 10px;
-      width: 100%;
-      padding: 8px;
-      border: none;
-      background: #111;
-      color: var(--terminal-text);
-      font-family: "Courier New", monospace;
-      font-size: 14px;
-      border-radius: 6px;
-    }
-
-    @media (max-width: 600px) {
       .terminal {
-        height: 250px;
+        background: var(--terminal-bg);
+        color: var(--terminal-text);
+        padding: 15px;
+        height: 300px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        border-radius: 6px;
+        box-shadow: 0 0 8px var(--terminal-text);
+        font-size: 14px;
+        line-height: 1.4;
+        margin-top: 10px;
       }
-      h2{
-        font-size: 15px;
+
+      input[type="file"],
+      .form-grid input {
+        width: 100%;
+        padding: 8px;
+        margin-top: 5px;
+        border: 1px solid #555;
+        border-radius: 6px;
+        background: #2c2c2c;
+        color: #fff;
       }
-    }
-  </style>
-</head>
-<body>
-  <button class="theme-toggle" onclick="toggleTheme()">
-    <i id="theme-icon" class="fas fa-moon"></i>
-  </button>
 
-  <h2>C File to PDF Converter</h2>
-
-  <form id="uploadForm">
-    <input type="file" name="cfile" required />
-    <button type="submit"><i class="fas fa-upload"></i> Upload</button>
-  </form>
-
-  <div class="form-grid">
-    <label for="name">Student Name *</label>
-    <input type="text" id="name" placeholder="Student Name" required />
-
-    <label for="rollno">Roll No *</label>
-    <input type="text" id="rollno" placeholder="Roll No" required />
-
-    <label for="date">Date *</label>
-    <input type="date" id="date" required />
-  </div>
-
-  <button onclick="runCode()"><i class="fas fa-play"></i> Run</button>
-  <button id="generateBtn" onclick="generatePDF()"><i class="fas fa-file-pdf"></i> Generate PDF</button>
-
-  <div class="terminal" id="terminal"></div>
-  <input type="text" id="terminalInput" class="terminal-input" placeholder="Type here..." />
-
-  <footer>
-    Built by <a href="https://github.com/athulcoder" target="_blank">athulcoder</a>
-  </footer>
-
-  <script>
-    const socket = io();
-    let sessionId = null;
-
-    const terminal = document.getElementById("terminal");
-    const generateBtn = document.getElementById("generateBtn");
-    const terminalInput = document.getElementById("terminalInput");
-    const themeIcon = document.getElementById("theme-icon");
-
-    document.getElementById("uploadForm").addEventListener("submit", async function (e) {
-      e.preventDefault();
-      const formData = new FormData(this);
-
-      const res = await fetch("/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        sessionId = data.session;
-        terminal.textContent = "";
-        appendToTerminal("Compiled successfully. Press ▶ Run.\n");
-      } else {
-        terminal.textContent = data.output || "Compilation failed.";
+      .form-grid input:focus {
+        outline: 2px solid var(--accent);
       }
-    });
 
-    function runCode() {
-      if (!sessionId) {
-        alert("Please upload and compile a file first.");
-        return;
+      label {
+        margin-top: 10px;
+        display: block;
       }
-      socket.emit("start_execution", { session: sessionId });
-      generateBtn.style.display = "inline-block";
-      terminalInput.focus();
-    }
 
-    function appendToTerminal(text) {
-      terminal.textContent += text;
-      terminal.scrollTop = terminal.scrollHeight;
-    }
+      button {
+        margin-top: 10px;
+        padding: 8px 16px;
+        background: var(--accent);
+        border: none;
+        border-radius: 6px;
+        font-weight: bold;
+        color: #000;
+        cursor: pointer;
+      }
 
-    terminalInput.addEventListener("keydown", function (e) {
-      if (!sessionId) return;
+      button i {
+        margin-right: 5px;
+      }
 
-      if (e.key === "Enter") {
-        const value = terminalInput.value;
-        socket.emit("send_input", {
-          session: sessionId,
-          input: value + "\n",
+      button:hover {
+        opacity: 0.9;
+      }
+
+      .form-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 15px;
+      }
+
+      #generateBtn {
+        display: none;
+      }
+
+      .theme-toggle {
+        position: absolute;
+        right: 20px;
+        top: 20px;
+        font-size: 20px;
+        background: transparent;
+        border: none;
+        color: var(--accent);
+      }
+
+      footer {
+        text-align: center;
+        font-size: 14px;
+        margin-top: 30px;
+        padding: 10px;
+        border-top: 1px solid #444;
+        color: #888;
+      }
+
+      footer a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+
+      .terminal-input {
+        margin-top: 10px;
+        width: 100%;
+        padding: 8px;
+        border: none;
+        background: #111;
+        color: var(--terminal-text);
+        font-family: "Courier New", monospace;
+        font-size: 14px;
+        border-radius: 6px;
+      }
+
+      @media (max-width: 600px) {
+        .terminal {
+          height: 250px;
+        }
+        h2 {
+          font-size: 15px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <button class="theme-toggle" onclick="toggleTheme()">
+      <i id="theme-icon" class="fas fa-moon"></i>
+    </button>
+
+    <h2>C File to PDF Converter</h2>
+
+    <form id="uploadForm">
+      <input type="file" name="cfile" required />
+      <button type="submit"><i class="fas fa-upload"></i> Upload</button>
+    </form>
+
+    <div class="form-grid">
+      <label for="name">Student Name *</label>
+      <input type="text" id="name" placeholder="Student Name" required />
+
+      <label for="rollno">Roll No *</label>
+      <input type="text" id="rollno" placeholder="Roll No" required />
+
+      <label for="date">Date *</label>
+      <input type="date" id="date" required />
+    </div>
+
+    <button onclick="runCode()"><i class="fas fa-play"></i> Run</button>
+    <button id="generateBtn" onclick="generatePDF()">
+      <i class="fas fa-file-pdf"></i> Generate PDF
+    </button>
+
+    <div class="terminal" id="terminal"></div>
+    <input
+      type="text"
+      id="terminalInput"
+      class="terminal-input"
+      placeholder="Type here..."
+    />
+
+    <footer>
+      Built by
+      <a href="https://github.com/athulcoder" target="_blank">athulcoder</a>
+    </footer>
+
+    <script>
+      const socket = io();
+      let sessionId = null;
+
+      const terminal = document.getElementById("terminal");
+      const generateBtn = document.getElementById("generateBtn");
+      const terminalInput = document.getElementById("terminalInput");
+      const themeIcon = document.getElementById("theme-icon");
+
+      document
+        .getElementById("uploadForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+          const formData = new FormData(this);
+
+          const res = await fetch("/upload", {
+            method: "POST",
+            body: formData,
+          });
+
+          const data = await res.json();
+          if (data.success) {
+            sessionId = data.session;
+            terminal.textContent = "";
+            appendToTerminal("Compiled successfully. Press ▶ Run.\n");
+          } else {
+            terminal.textContent = data.output || "Compilation failed.";
+          }
         });
-        appendToTerminal(value + "\n");
-        terminalInput.value = "";
-        e.preventDefault();
-      }
-    });
 
-    function generatePDF() {
-      const name = document.getElementById("name").value.trim();
-      const rollno = document.getElementById("rollno").value.trim();
-      const date = document.getElementById("date").value;
-      const output = document.getElementById("terminal").innerText;
-
-      if (!name || !rollno || !date) {
-        alert("All fields are required before generating PDF.");
-        return;
+      function runCode() {
+        if (!sessionId) {
+          alert("Please upload and compile a file first.");
+          return;
+        }
+        socket.emit("start_execution", { session: sessionId });
+        generateBtn.style.display = "inline-block";
+        terminalInput.focus();
       }
 
-      socket.emit("generate_pdf", {
-        session: sessionId,
-        name,
-        rollno,
-        date,
-        output,
+      function appendToTerminal(text) {
+        terminal.textContent += text;
+        terminal.scrollTop = terminal.scrollHeight;
+      }
+
+      terminalInput.addEventListener("keydown", function (e) {
+        if (!sessionId) return;
+
+        if (e.key === "Enter") {
+          const value = terminalInput.value;
+          socket.emit("send_input", {
+            session: sessionId,
+            input: value + "\n",
+          });
+          appendToTerminal(value + "\n");
+          terminalInput.value = "";
+          e.preventDefault();
+        }
       });
-    }
 
-    socket.on("terminal_output", function (data) {
-      appendToTerminal(data);
-    });
+      function generatePDF() {
+        const name = document.getElementById("name").value.trim();
+        const rollno = document.getElementById("rollno").value.trim();
+        const date = document.getElementById("date").value;
+        const output = document.getElementById("terminal").innerText;
 
-    socket.on("pdf_generated", (data) => {
-      if (data.success) {
-        window.open(data.pdf_url, "_blank");
-      } else {
-        alert("Failed to generate PDF: " + data.error);
+        if (!name || !rollno || !date) {
+          alert("All fields are required before generating PDF.");
+          return;
+        }
+
+        socket.emit("generate_pdf", {
+          session: sessionId,
+          name,
+          rollno,
+          date,
+          output,
+        });
       }
-    });
 
-    function toggleTheme() {
-      document.body.classList.toggle("light");
-      themeIcon.classList.toggle("fa-moon");
-      themeIcon.classList.toggle("fa-sun");
-    }
-  </script>
-</body>
+      socket.on("terminal_output", function (data) {
+        appendToTerminal(data);
+      });
+
+      socket.on("pdf_generated", (data) => {
+        if (data.success) {
+          window.open(data.pdf_url, "_blank");
+        } else {
+          alert("Failed to generate PDF: " + data.error);
+        }
+      });
+
+      function toggleTheme() {
+        document.body.classList.toggle("light");
+        themeIcon.classList.toggle("fa-moon");
+        themeIcon.classList.toggle("fa-sun");
+      }
+    </script>
+  </body>
 </html>
