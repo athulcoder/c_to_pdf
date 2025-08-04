@@ -12,9 +12,9 @@ def generate_pdf(c_file_path, student_name, exp_name,roll_no, date_str, output_t
         f"{student_name}",
         f"Roll no {roll_no}",
         f"{date_str}",
-        "**************************/",
+        "****************************",
         f"{exp_name}",
-        "**************************/",
+        "*****************************/",
         ""
     ]
 
