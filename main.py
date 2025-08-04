@@ -94,6 +94,7 @@ def download_pdf(filename):
 def handle_generate_pdf(data):
     session_id = data.get("session")
     name = data.get("name")
+    expname = data.get("expname")
     rollno = data.get("rollno")
     date = data.get("date")
     output = data.get("output", "")
@@ -108,7 +109,7 @@ def handle_generate_pdf(data):
     pdf_path = os.path.join(app.config["UPLOAD_FOLDER"], pdf_name)
 
     try:
-        generate_pdf(c_file_path, name, rollno, date, output, pdf_path)
+        generate_pdf(c_file_path, name, expname,rollno, date, output, pdf_path)
         emit("pdf_generated", {"success": True, "pdf_url": f"/download/{pdf_name}"})
     except Exception as e:
         emit("pdf_generated", {"success": False, "error": str(e)})

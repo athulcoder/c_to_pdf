@@ -160,6 +160,8 @@
     </form>
 
     <div class="form-grid">
+      <label for="name">Experiment Name *</label>
+      <input type="text" id="expname" placeholder="Experiment Name" required />
       <label for="name">Student Name *</label>
       <input type="text" id="name" placeholder="Student Name" required />
 
@@ -250,18 +252,21 @@
 
       function generatePDF() {
         const name = document.getElementById("name").value.trim();
+        const expname = document.getElementById("expname").value.trim();
         const rollno = document.getElementById("rollno").value.trim();
         const date = document.getElementById("date").value;
         const output = document.getElementById("terminal").innerText;
 
-        if (!name || !rollno || !date) {
+        if (!name || !expname || !rollno || !date) {
           alert("All fields are required before generating PDF.");
           return;
         }
 
         socket.emit("generate_pdf", {
           session: sessionId,
+
           name,
+          expname,
           rollno,
           date,
           output,

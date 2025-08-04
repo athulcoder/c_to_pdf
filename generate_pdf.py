@@ -5,13 +5,15 @@ from reportlab.lib.units import mm
 from xml.sax.saxutils import escape
 from reportlab.lib.enums import TA_LEFT
 
-def generate_pdf(c_file_path, student_name, roll_no, date_str, output_text, output_pdf):
+def generate_pdf(c_file_path, student_name, exp_name,roll_no, date_str, output_text, output_pdf):
     
     header_lines = [
         "/*****************************",
         f"{student_name}",
         f"Roll no {roll_no}",
         f"{date_str}",
+        "**************************/",
+        f"{exp_name}",
         "**************************/",
         ""
     ]
