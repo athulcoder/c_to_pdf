@@ -103,6 +103,7 @@ def handle_generate_pdf(data):
     if not session:
         emit("pdf_generated", {"success": False, "error": "Invalid session"})
         return
+    
 
     c_file_path = session["exec"].replace(".out", ".c")
     pdf_name = f"{uuid.uuid4().hex}.pdf"
