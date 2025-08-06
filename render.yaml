@@ -3,7 +3,7 @@ services:
     name: flask-socketio-app
     runtime: python
     buildCommand: pip install -r requirements.txt
-    startCommand: python main.py
+    startCommand: python -u main.py
     envVars:
       - key: PORT
         value: 8000
