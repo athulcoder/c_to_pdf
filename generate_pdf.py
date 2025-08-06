@@ -17,7 +17,7 @@ def generate_pdf(c_file_path, student_name, exp_name,roll_no, date_str, output_t
         "*****************************/",
         ""
     ]
-    print(f"Name :{student_name}\nRoll no : {roll_no}\n Exp : {exp_name}\n Date:{date_str} ")
+    print(f"Name :{student_name}\nRoll no : {roll_no}\n Exp : {exp_name}\n Date:{date_str} ",flush=True)
 
 
     with open(c_file_path, "r") as f:

@@ -83,9 +83,9 @@ def download_pdf(filename):
     def remove_file(response):
         try:
             os.remove(file_path)
-            print(f"Deleted file: {file_path}")
+            print(f"Deleted file: {file_path}",flush=True)
         except Exception as e:
-            print(f"Error deleting file: {e}")
+            print(f"Error deleting file: {e}",flush=True)
         return response
 
     return send_from_directory(app.config["UPLOAD_FOLDER"], filename, as_attachment=True)
@@ -117,4 +117,4 @@ def handle_generate_pdf(data):
 
 
 if __name__ == "__main__":
-    socketio.run(app, host="0.0.0.0", port=8000)
+    socketio.run(app,host="0.0.0.0", port=8000, debug=True)
