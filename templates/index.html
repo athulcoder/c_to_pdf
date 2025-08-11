@@ -225,8 +225,10 @@
           alert("Please upload and compile a file first.");
           return;
         }
+		  
         socket.emit("start_execution", { session: sessionId });
         generateBtn.style.display = "inline-block";
+		  terminal.textContent=""
         terminalInput.focus();
       }
 
