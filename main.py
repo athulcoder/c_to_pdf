@@ -3,13 +3,12 @@ import uuid
 import subprocess
 import pty
 import select
-import shlex
-from flask import send_from_directory, after_this_request
+from flask import send_from_directory, after_this_request, request, render_template
 from generate_pdf import generate_pdf
 import eventlet
-eventlet.monkey_patch()  
+eventlet.monkey_patch()
 
-from flask import Flask, render_template, request
+from flask import Flask
 from flask_socketio import SocketIO, emit
 
 app = Flask(__name__)
@@ -18,6 +17,7 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
 
+# Store session info { session_id: {exec, fd, pid, sid} }
 sessions = {}
 
 @app.route("/")
@@ -45,7 +45,7 @@ def handle_execution(data):
     session_id = data.get("session")
     exec_path = sessions.get(session_id, {}).get("exec")
     if not exec_path:
-        emit("terminal_output", "Executable not found.\n")
+        emit("terminal_output", "Executable not found.\n", to=request.sid)
         return
 
     pid, fd = pty.fork()
@@ -54,13 +54,14 @@ def handle_execution(data):
     else:
         sessions[session_id]["fd"] = fd
         sessions[session_id]["pid"] = pid
+        sessions[session_id]["sid"] = request.sid   # bind client socket ID
 
         while True:
             r, _, _ = select.select([fd], [], [], 0.1)
             if fd in r:
                 try:
                     output = os.read(fd, 1024).decode()
-                    socketio.emit("terminal_output", output)
+                    socketio.emit("terminal_output", output, to=request.sid)  # send only to this client
                 except:
                     break
 
@@ -72,10 +73,7 @@ def handle_input(data):
     if fd:
         os.write(fd, user_input.encode())
 
-
-
 @app.route("/download/<filename>")
-
 def download_pdf(filename):
     file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
 
@@ -83,9 +81,9 @@ def download_pdf(filename):
     def remove_file(response):
         try:
             os.remove(file_path)
-            print(f"Deleted file: {file_path}",flush=True)
+            print(f"Deleted file: {file_path}", flush=True)
         except Exception as e:
-            print(f"Error deleting file: {e}",flush=True)
+            print(f"Error deleting file: {e}", flush=True)
         return response
 
     return send_from_directory(app.config["UPLOAD_FOLDER"], filename, as_attachment=True)
@@ -101,20 +99,18 @@ def handle_generate_pdf(data):
 
     session = sessions.get(session_id)
     if not session:
-        emit("pdf_generated", {"success": False, "error": "Invalid session"})
+        emit("pdf_generated", {"success": False, "error": "Invalid session"}, to=request.sid)
         return
-    
 
     c_file_path = session["exec"].replace(".out", ".c")
     pdf_name = f"{uuid.uuid4().hex}.pdf"
     pdf_path = os.path.join(app.config["UPLOAD_FOLDER"], pdf_name)
 
     try:
-        generate_pdf(c_file_path, name, expname,rollno, date, output, pdf_path)
-        emit("pdf_generated", {"success": True, "pdf_url": f"/download/{pdf_name}"})
+        generate_pdf(c_file_path, name, expname, rollno, date, output, pdf_path)
+        emit("pdf_generated", {"success": True, "pdf_url": f"/download/{pdf_name}"}, to=request.sid)
     except Exception as e:
-        emit("pdf_generated", {"success": False, "error": str(e)})
-
+        emit("pdf_generated", {"success": False, "error": str(e)}, to=request.sid)
 
 if __name__ == "__main__":
-    socketio.run(app,host="0.0.0.0", port=8000)
+    socketio.run(app, host="0.0.0.0", port=8000)
