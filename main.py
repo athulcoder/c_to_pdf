@@ -24,14 +24,35 @@ sessions = {}
 def index():
     return render_template("index.html")
 
+MAX_FILE_SIZE = 3 * 1024 * 1024  # 3 MB
+ALLOWED_EXTENSIONS = {".c"}
+
 @app.route("/upload", methods=["POST"])
 def upload():
-    file = request.files["cfile"]
+    file = request.files.get("cfile")
+    if not file:
+        return {"success": False, "output": "No file uploaded!"}
+
+    # Check extension
+    _, ext = os.path.splitext(file.filename.lower())
+    if ext not in ALLOWED_EXTENSIONS:
+        print("Tried to upload not allowed file \n",flush=True)
+        return {"success": False, "output": "haha catch you 😎 only .c files allowed!"}
+
+    # Check size
+    file.seek(0, os.SEEK_END)
+    size = file.tell()
+    file.seek(0)  # reset pointer for saving later
+    if size > MAX_FILE_SIZE:
+        return {"success": False, "output": "haha catch you 🚫 file too big (max 3MB)!"}
+
+    # Save valid file
     filename = os.path.join(app.config['UPLOAD_FOLDER'], f"{uuid.uuid4().hex}.c")
     file.save(filename)
 
     exec_name = filename.replace(".c", ".out")
-    compile_proc = subprocess.run(["gcc", "-w", filename, "-o", exec_name], capture_output=True, text=True)
+    compile_proc = subprocess.run(["gcc", "-w", filename, "-o", exec_name],
+                                  capture_output=True, text=True)
 
     if compile_proc.returncode != 0:
         return {"success": False, "output": compile_proc.stderr}
@@ -39,7 +60,6 @@ def upload():
     session_id = uuid.uuid4().hex
     sessions[session_id] = {"exec": exec_name}
     return {"success": True, "session": session_id}
-
 @socketio.on("start_execution")
 def handle_execution(data):
     session_id = data.get("session")
@@ -113,4 +133,4 @@ def handle_generate_pdf(data):
         emit("pdf_generated", {"success": False, "error": str(e)}, to=request.sid)
 
 if __name__ == "__main__":
-    socketio.run(app, host="0.0.0.0", port=8000)
+    socketio.run(app, host="0.0.0.0", port=8000,debug=True)

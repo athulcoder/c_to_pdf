@@ -49,19 +49,20 @@ def generate_pdf(c_file_path, student_name, exp_name,roll_no, date_str, output_t
     paragraphs = [format_line(line) for line in full_lines]
 
     page_width, page_height = A4
-    margin = 15 * mm
+    top_bottom_margin = 20*mm
+    left_right_margin = 15 * mm
     col_gap = 5 * mm
-    col_width = (page_width - 2 * margin - col_gap) / 2
-    col_height = page_height - 2 * margin
+    col_width = (page_width - 2 * left_right_margin - col_gap) / 2
+    col_height = page_height - 2 * top_bottom_margin
 
     
     doc = BaseDocTemplate(output_pdf, pagesize=A4,
-                          leftMargin=margin, rightMargin=margin,
-                          topMargin=margin, bottomMargin=margin)
+                          leftMargin=left_right_margin, rightMargin=left_right_margin,
+                          topMargin=top_bottom_margin, bottomMargin=top_bottom_margin)
 
     
-    left_frame = Frame(margin, margin, col_width, col_height, id='left')
-    right_frame = Frame(margin + col_width + col_gap, margin, col_width, col_height, id='right')
+    left_frame = Frame(left_right_margin, left_right_margin, col_width, col_height, id='left')
+    right_frame = Frame(left_right_margin + col_width + col_gap, left_right_margin, col_width, col_height, id='right')
 
     template = PageTemplate(id='TwoCol', frames=[left_frame, right_frame])
     doc.addPageTemplates([template])
