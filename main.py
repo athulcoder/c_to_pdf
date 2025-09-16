@@ -37,7 +37,7 @@ def upload():
     _, ext = os.path.splitext(file.filename.lower())
     if ext not in ALLOWED_EXTENSIONS:
         print("Tried to upload not allowed file \n",flush=True)
-        return {"success": False, "output": "haha catch you 😎 only .c files allowed!"}
+        return {"success": False, "output": "haha catch you only .c files allowed!"}
 
     # Check size
     file.seek(0, os.SEEK_END)
