@@ -3,7 +3,7 @@ import uuid
 import subprocess
 import pty
 import select
-from flask import send_from_directory, after_this_request, request, render_template, request, jsonify
+from flask import send_from_directory, after_this_request, request, render_template
 from generate_pdf import generate_pdf
 import eventlet
 eventlet.monkey_patch()
@@ -24,76 +24,21 @@ sessions = {}
 def index():
     return render_template("index.html")
 
-
-def limit_resources():
-    """Apply CPU, memory, and process limits inside child process."""
-    resource.setrlimit(resource.RLIMIT_CPU, (2, 2))  # max 2 sec CPU
-    resource.setrlimit(resource.RLIMIT_AS, (256*1024*1024, 256*1024*1024))  # 256 MB RAM
-    resource.setrlimit(resource.RLIMIT_NPROC, (10, 10))  # max 10 processes
-    resource.setrlimit(resource.RLIMIT_FSIZE, (10*1024*1024, 10*1024*1024))  # 10 MB file output
-
 @app.route("/upload", methods=["POST"])
 def upload():
-    file = request.files.get("cfile")
-    if not file:
-        return jsonify({"success": False, "error": "no file uploaded"}), 400
-    
-    # validate file size (max 1MB)
-    file.seek(0, os.SEEK_END)
-    size = file.tell()
-    file.seek(0)
-    if size > 1 * 1024 * 1024:
-        return jsonify({"success": False, "error": "file too large"}), 400
-    
-    # save file
+    file = request.files["cfile"]
     filename = os.path.join(app.config['UPLOAD_FOLDER'], f"{uuid.uuid4().hex}.c")
     file.save(filename)
 
     exec_name = filename.replace(".c", ".out")
-
-    # compile safely
-    try:
-        compile_proc = subprocess.run(
-            ["gcc", "-w", filename, "-o", exec_name],
-            capture_output=True,
-            text=False,         # don’t force UTF-8
-            timeout=10          # prevent long compilation
-        )
-    except subprocess.TimeoutExpired:
-        return jsonify({"success": False, "error": "compilation timed out"}), 504
-
-    stderr = compile_proc.stderr.decode(errors="replace")
-    stdout = compile_proc.stdout.decode(errors="replace")
+    compile_proc = subprocess.run(["gcc", "-w", filename, "-o", exec_name], capture_output=True, text=True)
 
     if compile_proc.returncode != 0:
-        return jsonify({"success": False, "output": stderr}), 200
+        return {"success": False, "output": compile_proc.stderr}
 
-    # register session
     session_id = uuid.uuid4().hex
     sessions[session_id] = {"exec": exec_name}
-
-    return jsonify({
-        "success": True,
-        "session": session_id,
-        "compile_stdout": stdout,
-        "compile_stderr": stderr
-    })
-# @app.route("/upload", methods=["POST"])
-# def upload():
-
-#     file = request.files["cfile"]
-#     filename = os.path.join(app.config['UPLOAD_FOLDER'], f"{uuid.uuid4().hex}.c")
-#     file.save(filename)
-
-#     exec_name = filename.replace(".c", ".out")
-#     compile_proc = subprocess.run(["gcc", "-w", filename, "-o", exec_name], capture_output=True, text=True)
-
-#     if compile_proc.returncode != 0:
-#         return {"success": False, "output": compile_proc.stderr}
-
-#     session_id = uuid.uuid4().hex
-#     sessions[session_id] = {"exec": exec_name}
-#     return {"success": True, "session": session_id}
+    return {"success": True, "session": session_id}
 
 @socketio.on("start_execution")
 def handle_execution(data):
