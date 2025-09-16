@@ -17,7 +17,7 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
 
-# Store session info { session_id: {exec, fd, pid, sid} }
+
 sessions = {}
 
 @app.route("/")
@@ -54,14 +54,14 @@ def handle_execution(data):
     else:
         sessions[session_id]["fd"] = fd
         sessions[session_id]["pid"] = pid
-        sessions[session_id]["sid"] = request.sid   # bind client socket ID
+        sessions[session_id]["sid"] = request.sid   
 
         while True:
             r, _, _ = select.select([fd], [], [], 0.1)
             if fd in r:
                 try:
                     output = os.read(fd, 1024).decode()
-                    socketio.emit("terminal_output", output, to=request.sid)  # send only to this client
+                    socketio.emit("terminal_output", output, to=request.sid)  
                 except:
                     break
 
