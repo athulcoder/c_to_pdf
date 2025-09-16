@@ -49,7 +49,7 @@ def generate_pdf(c_file_path, student_name, exp_name,roll_no, date_str, output_t
     paragraphs = [format_line(line) for line in full_lines]
 
     page_width, page_height = A4
-    margin = 10 * mm
+    margin = 15 * mm
     col_gap = 5 * mm
     col_width = (page_width - 2 * margin - col_gap) / 2
     col_height = page_height - 2 * margin
